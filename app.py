@@ -72,7 +72,7 @@ st.subheader("📊 Dataset Preview")
 
 st.dataframe(df.head())
 
-# ---------------- TARGET DISTRIBUTION ----------------
+# ---------------- VISUALIZATION ----------------
 
 st.subheader("📈 Dataset Visualization")
 
@@ -135,15 +135,19 @@ for col in cleaned_df.columns[:-1]:
         (cleaned_df[col] <= upper_limit)
     ]
 
-# ---------------- CLEANED SHAPE ----------------
+# ---------------- IMPORTANT FEATURES ----------------
 
-st.subheader("🧹 Dataset Shape After Outlier Removal")
-
-st.write(cleaned_df.shape)
+selected_features = [
+    'mean radius',
+    'mean texture',
+    'mean perimeter',
+    'mean area',
+    'mean smoothness'
+]
 
 # ---------------- FEATURES & TARGET ----------------
 
-X = cleaned_df.drop('target', axis=1)
+X = cleaned_df[selected_features]
 
 y = cleaned_df['target']
 
@@ -202,7 +206,7 @@ with m2:
 
 st.subheader("📉 Confusion Matrix")
 
-fig3, ax3 = plt.subplots(figsize=(12,4))
+fig3, ax3 = plt.subplots(figsize=(4,3))
 
 cm = confusion_matrix(y_test, y_pred)
 
@@ -236,49 +240,63 @@ st.markdown("---")
 
 st.subheader("🩺 Predict Cancer Type")
 
-selected_features = [
-    'mean radius',
-    'mean texture',
-    'mean perimeter',
-    'mean area',
-    'mean smoothness'
-]
+c1, c2 = st.columns(2)
 
 input_values = []
 
-cols = st.columns(2)
+with c1:
 
-for idx, feature in enumerate(selected_features):
+    mean_radius = st.slider(
+        "Mean Radius",
+        float(df['mean radius'].min()),
+        float(df['mean radius'].max()),
+        float(df['mean radius'].mean())
+    )
 
-    min_val = float(df[feature].min())
+    input_values.append(mean_radius)
 
-    max_val = float(df[feature].max())
+    mean_texture = st.slider(
+        "Mean Texture",
+        float(df['mean texture'].min()),
+        float(df['mean texture'].max()),
+        float(df['mean texture'].mean())
+    )
 
-    mean_val = float(df[feature].mean())
+    input_values.append(mean_texture)
 
-    with cols[idx % 2]:
+    mean_perimeter = st.slider(
+        "Mean Perimeter",
+        float(df['mean perimeter'].min()),
+        float(df['mean perimeter'].max()),
+        float(df['mean perimeter'].mean())
+    )
 
-        value = st.slider(
-            feature,
-            min_val,
-            max_val,
-            mean_val
-        )
+    input_values.append(mean_perimeter)
 
-    input_values.append(value)
+with c2:
 
-# ---------------- PREPARE INPUT ----------------
+    mean_area = st.slider(
+        "Mean Area",
+        float(df['mean area'].min()),
+        float(df['mean area'].max()),
+        float(df['mean area'].mean())
+    )
 
-full_input = np.zeros((1, X.shape[1]))
+    input_values.append(mean_area)
 
-for idx, feature in enumerate(selected_features):
+    mean_smoothness = st.slider(
+        "Mean Smoothness",
+        float(df['mean smoothness'].min()),
+        float(df['mean smoothness'].max()),
+        float(df['mean smoothness'].mean())
+    )
 
-    feature_index = list(X.columns).index(feature)
+    input_values.append(mean_smoothness)
 
-    full_input[0][feature_index] = input_values[idx]
+# ---------------- INPUT DATAFRAME ----------------
 
 input_df = pd.DataFrame(
-    full_input,
+    [input_values],
     columns=X.columns
 )
 
@@ -286,17 +304,17 @@ input_df = pd.DataFrame(
 
 input_scaled = scaler.transform(input_df)
 
-# ---------------- PREDICTION ----------------
+# ---------------- PREDICT ----------------
 
 prediction = model.predict(input_scaled)
 
-result = "Benign" if prediction[0] == 1 else "Malignant"
+result = "Benign (Non-Cancerous)" if prediction[0] == 1 else "Malignant (Cancerous)"
 
 # ---------------- BUTTON ----------------
 
 if st.button("Predict"):
 
-    if result == "Benign":
+    if prediction[0] == 1:
 
         st.success(f"🟢 Prediction: {result}")
 
@@ -308,4 +326,4 @@ if st.button("Predict"):
 
 st.markdown("---")
 
-st.info("with love made by ~Chaitanya ❤️")
+st.info("Breast Cancer Dataset + SVM + Streamlit")
